@@ -4,7 +4,7 @@ pipeline {
     environment {
         GROQ_API_KEY     = credentials('GROQ-API-KEY')
         GITHUB_TOKEN     = credentials('GITHUB-TOKEN')
-        GITHUB-CREDENTIALS = credentials('GITHUB-CREDENTIAL')
+        GITHUB_CREDENTIALS = credentials('GITHUB-CREDENTIAL')
         GITHUB_CREDENTIALS_USR = GITHUB_CREDENTIALS.username
         GITHUB_CREDENTIALS_PSW = GITHUB_CREDENTIALS.password
         GIT_BRANCH = "ai-tests"
