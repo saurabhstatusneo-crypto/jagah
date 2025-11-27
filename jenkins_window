@@ -151,7 +151,7 @@ stage('Install Node.js Dependencies') {
             }
 
             Write-Host " Forcing GitHub token in remote URL..."
-            git remote set-url origin  ${env.REPO_URL}
+            git remote set-url origin  "${env.REPO_URL}"
 
             Write-Host " FORCE PUSHING branch..."
             git push origin ai-tests --force
