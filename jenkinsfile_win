@@ -91,23 +91,8 @@ pipeline {
                 '''
             }
         }
-
-        stage('Generate AI Tests (Node.js)') {
-            when { expression { fileExists('package.json') && fileExists('scripts/generate-tests.js') } }
-            steps {
-                powershell '''
-                    echo " Generating AI-based Node.js tests..."
-                    try {
-                        node scripts/generate-tests.js
-                    } catch {
-                        Write-Host " Node.js script failed, continuing..."
-                    }
-                '''
-            }
-        }
-
         stage('Generate AI Tests (Java/Spring Boot)') {
-            when { expression { fileExists('scripts/generate-java-tests-new.js') } }
+            when { expression { fileExists('script/generate-tests.js') } }
             steps {
                 powershell '''
                     echo " Generating AI-based Java/Spring Boot tests..."
@@ -117,7 +102,6 @@ pipeline {
                         Write-Host " Node.js not installed on this Jenkins agent."
                         exit 1
                     }
-
                     if (-not (Test-Path "node_modules/groq-sdk")) {
                         Write-Host " Installing groq-sdk..."
                         npm install groq-sdk
@@ -126,48 +110,49 @@ pipeline {
                             exit 1
                         }
                     }
-
                     try {
-                        node scripts/generate-java-tests-new.js
+                        node scripts/generate-tests.js
                     } catch {
                         Write-Host " Java test generation failed, continuing..."
                     }
                 '''
             }
         }
-       stage('Lint and Format') {
-            steps {
-                script {
-                    if (fileExists('package.json')) {
-                        powershell '''
-                            $scripts = npm run | Select-String -Pattern 'format|lint'
+stage('Lint and Format') {
+    steps {
+        script {
+            if (fileExists('package.json')) {
+                powershell '''
+                    $scripts = npm run | Select-String -Pattern 'format|lint'
 
-                            if ($scripts) {
-                                if ($scripts -match 'format') {
-                                    try { npm run format } catch { Write-Host " npm format failed" }
-                                }
+                    if ($scripts) {
+                        if ($scripts -match 'format') {
+                            try { npm run format } catch { Write-Host " npm format failed" }
+                        }
 
-                                if ($scripts -match 'lint') {
-                                    try { npm run lint } catch { Write-Host " npm lint failed" }
-                                }
-                            } else {
-                                Write-Host " No npm format/lint scripts found. Skipping..."
-                            }
-                        '''
+                        if ($scripts -match 'lint') {
+                            try { npm run lint } catch { Write-Host " npm lint failed" }
+                        }
+                    } else {
+                        Write-Host " No npm format/lint scripts found. Skipping..."
                     }
+                '''
+            }
 
-                    if (fileExists('pom.xml')) {
-                        powershell '''
-                            try { mvn checkstyle:check -Dcheckstyle.failOnViolation=false
-                           }
-                         catch {
-                          Write-Host " Maven checkstyle failed, continuing..."
-                         }
-                        '''
+            if (fileExists('pom.xml')) {
+                powershell '''
+                    try { 
+                        mvn checkstyle:check "-Dcheckstyle.failOnViolation=false"
                     }
-                }
+                    catch {
+                        Write-Host " Maven checkstyle failed, continuing..."
+                    }
+                '''
             }
         }
+    }
+}
+
  
 
         stage('Commit and Push Before PR') {
