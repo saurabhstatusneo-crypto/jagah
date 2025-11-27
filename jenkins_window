@@ -29,22 +29,22 @@ pipeline {
 
                     git rev-parse --verify ${env.GIT_BRANCH} > \$null 2>&1
                     if (\$LASTEXITCODE -eq 0) {
-                        Write-Host "🌐 Switching to existing local branch: ${env.GIT_BRANCH}"
+                        Write-Host "Switching to existing local branch: ${env.GIT_BRANCH}"
                         git checkout ${env.GIT_BRANCH} > \$null 2>&1
 
                         git ls-remote --exit-code origin ${env.GIT_BRANCH} > \$null 2>&1
                         if (\$LASTEXITCODE -eq 0) {
                             try { git pull origin ${env.GIT_BRANCH} } catch {}
                         } else {
-                            Write-Host "⚠️ No remote branch to pull from, continuing..."
+                            Write-Host " No remote branch to pull from, continuing..."
                         }
                     } else {
                         git ls-remote --exit-code origin ${env.GIT_BRANCH} > \$null 2>&1
                         if (\$LASTEXITCODE -eq 0) {
-                            Write-Host "🌐 Branch exists on remote. Checking out tracking branch..."
+                            Write-Host " Branch exists on remote. Checking out tracking branch..."
                             try { git checkout -b ${env.GIT_BRANCH} origin/${env.GIT_BRANCH} } catch { git checkout -b ${env.GIT_BRANCH} }
                         } else {
-                            Write-Host "🌐 Branch does not exist locally or remotely. Creating new branch: ${env.GIT_BRANCH}"
+                            Write-Host "Branch does not exist locally or remotely. Creating new branch: ${env.GIT_BRANCH}"
                             git checkout -b ${env.GIT_BRANCH}
                         }
                     }
@@ -58,7 +58,7 @@ pipeline {
 stage('Install Node.js Dependencies') {
     steps {
         powershell '''
-            Write-Host "🔧 Installing Node.js dependencies..."
+            Write-Host "Installing Node.js dependencies..."
 
             # 1. Set environment variable using PowerShell syntax
             $env:HUSKY_SKIP_INSTALL = '0' 
@@ -66,13 +66,13 @@ stage('Install Node.js Dependencies') {
             # 2. Run npm ci
             npm ci
             if ($LASTEXITCODE -ne 0) {
-                Write-Host "⚠️ npm ci failed, continuing..."
+                Write-Host "npm ci failed, continuing..."
             }
 
             # 3. Run npx husky install
             npx husky install
             if ($LASTEXITCODE -ne 0) {
-                Write-Host "⚠️ husky install failed, continuing..."
+                Write-Host "husky install failed, continuing..."
             }
         '''
     }
@@ -97,11 +97,11 @@ stage('Install Node.js Dependencies') {
             when { expression { fileExists('package.json') && fileExists('scripts/generate-tests.js') } }
             steps {
                 powershell '''
-                    echo "🤖 Generating AI-based Node.js tests..."
+                    echo "Generating AI-based Node.js tests..."
                     try {
                         node scripts/generate-tests.js
                     } catch {
-                        Write-Host "⚠️ Node.js script failed, continuing..."
+                        Write-Host " Node.js script failed, continuing..."
                     }
                 '''
             }
@@ -111,19 +111,19 @@ stage('Install Node.js Dependencies') {
             when { expression { fileExists('scripts/generate-java-tests-new.js') } }
             steps {
                 powershell '''
-                    echo "🤖 Generating AI-based Java/Spring Boot tests..."
+                    echo " Generating AI-based Java/Spring Boot tests..."
 
                     node -v
                     if ($LASTEXITCODE -ne 0) {
-                        Write-Host "❌ Node.js not installed on this Jenkins agent."
+                        Write-Host " Node.js not installed on this Jenkins agent."
                         exit 1
                     }
 
                     if (-not (Test-Path "node_modules/groq-sdk")) {
-                        Write-Host "📦 Installing groq-sdk..."
+                        Write-Host "Installing groq-sdk..."
                         npm install groq-sdk
                         if ($LASTEXITCODE -ne 0) {
-                            Write-Host "❌ Failed to install groq-sdk"
+                            Write-Host "Failed to install groq-sdk"
                             exit 1
                         }
                     }
