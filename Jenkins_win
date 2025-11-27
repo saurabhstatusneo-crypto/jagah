@@ -2,18 +2,16 @@ pipeline {
     agent any
 
     environment {
-        GROQ_API_KEY     = credentials('groq_api_key')
-        GITHUB_TOKEN     = credentials('github_token')
-        GITHUB_CREDENTIALS_USR = credentials('GITHUB_CREDENTIALS_USR')
-        GITHUB_CREDENTIALS_PSW = credentials('GITHUB_CREDENTIALS_PSW')
-
+        GROQ_API_KEY     = credentials('GROQ-API-KEY')
+        GITHUB_TOKEN     = credentials('GITHUB-TOKEN')
+        GITHUB-CREDENTIAL = credentials('GITHUB-CREDENTIAL')
+        GITHUB_CREDENTIALS_USR = credentials('GITHUB-CREDENTIAL').username
+        GITHUB_CREDENTIALS_PSW = credentials('GITHUB-CREDENTIAL').password
         GIT_BRANCH = "ai-tests"
-
         REPO_URL = "https://${GITHUB_CREDENTIALS_USR}:${GITHUB_CREDENTIALS_PSW}@github.com/saurabhstatusneo-crypto/jagah.git"
-
         HUSKY_SKIP_INSTALL = '0'
-        JAVA_HOME        = "/usr/lib/jvm/java-17-openjdk"
-        MAVEN_HOME       = "/usr/share/maven"
+        JAVA_HOME       = "C:\\Program Files\\Common Files\\Oracle\\Java\\javapath" 
+        MAVEN_HOME      = "C:\\opt\\tools\\maven"
         PATH             = "${env.MAVEN_HOME}/bin:${env.JAVA_HOME}/bin:${env.PATH}"
     }
 
@@ -173,7 +171,7 @@ pipeline {
             }
 
             Write-Host " Forcing GitHub token in remote URL..."
-            git remote set-url origin "https://${GITHUB_CREDENTIALS_USR}:${GITHUB_CREDENTIALS_PSW}@github.com/saurabhstatusneo-crypto/jagah.git"
+            git remote set-url origin  ${env.REPO_URL}
 
             Write-Host " FORCE PUSHING branch..."
             git push origin ai-tests --force
