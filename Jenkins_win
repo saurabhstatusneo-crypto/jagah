@@ -4,15 +4,15 @@ pipeline {
     environment {
         GROQ_API_KEY     = credentials('GROQ-API-KEY')
         GITHUB_TOKEN     = credentials('GITHUB-TOKEN')
-        GITHUB-CREDENTIAL = credentials('GITHUB-CREDENTIAL')
-        GITHUB_CREDENTIALS_USR = credentials('GITHUB-CREDENTIAL').username
-        GITHUB_CREDENTIALS_PSW = credentials('GITHUB-CREDENTIAL').password
+        GITHUB-CREDENTIALS = credentials('GITHUB-CREDENTIAL')
+        GITHUB_CREDENTIALS_USR = GITHUB_CREDENTIALS.username
+        GITHUB_CREDENTIALS_PSW = GITHUB_CREDENTIALS.password
         GIT_BRANCH = "ai-tests"
         REPO_URL = "https://${GITHUB_CREDENTIALS_USR}:${GITHUB_CREDENTIALS_PSW}@github.com/saurabhstatusneo-crypto/jagah.git"
         HUSKY_SKIP_INSTALL = '0'
         JAVA_HOME       = "C:\\Program Files\\Common Files\\Oracle\\Java\\javapath" 
         MAVEN_HOME      = "C:\\opt\\tools\\maven"
-        PATH             = "${env.MAVEN_HOME}/bin:${env.JAVA_HOME}/bin:${env.PATH}"
+        PATH             = "${env.MAVEN_HOME}/bin;${env.JAVA_HOME}/bin;${env.PATH}"
     }
 
     stages {
