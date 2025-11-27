@@ -1,0 +1,177 @@
+pipeline {
+    agent any
+environment {
+    GROQ_API_KEY = credentials('GROQ_API_KEY')
+    GITHUB_TOKEN = credentials('GITHUB_TOKEN')
+    SOURCE_BRANCH = "node"
+    TARGET_BRANCH = "ai-tests"
+    JAVA_HOME = "/Library/Java/JavaVirtualMachines/jdk-21.jdk/Contents/Home"
+    MAVEN_HOME = "/usr/local/opt/maven"
+    PATH = "$PATH:${MAVEN_HOME}/bin:${JAVA_HOME}/bin"
+    REPO_URL = "https://saurabhstatusneo-crypto:${GITHUB_TOKEN}@github.com/saurabhstatusneo-crypto/new-end-to-end.git"
+    HUSKY_SKIP_INSTALL = "0"
+}
+    stages {
+
+        /* -----------------------------
+           Load CI Config from properties file
+        ------------------------------*/
+        stage('Load CI Config') {
+            steps {
+                script {
+
+                    def props = [:]
+                    readFile('ci.properties').split('\n').each { line ->
+                        line = line.trim()
+                        if (line && !line.startsWith('#')) {
+                            def (k, v) = line.split('=', 2)
+                            props[k.trim()] = v.trim().replace('"','')
+                        }
+                    }
+
+                    env.SOURCE_BRANCH      = props['SOURCE_BRANCH']
+                    env.TARGET_BRANCH = props['TARGET_BRANCH']
+                    env.JAVA_HOME = props['JAVA_HOME']
+                    env.MAVEN_HOME     = props['MAVEN_HOME']
+                    env.PATH    = props['PATH']
+                    env.REPO_URL    = props['REPO_URL']
+                    env.HUSKY_SKIP_INSTALL = props['HUSKY_SKIP_INSTALL']
+                }
+            }
+        }
+        stage('Checkout Cleanly & Create Branch') {
+            steps {
+                sh '''
+                    set -e
+
+                    echo "Cleaning workspace (reset + remove untracked)…"
+                    git reset --hard || true
+                    git clean -fd || true
+
+                    echo "Setting authenticated origin URL..."
+                    git remote set-url origin "${REPO_URL}"
+
+                    echo "Fetching remote branches…"
+                    git fetch origin --prune
+
+                    echo "Checking out source branch: ${SOURCE_BRANCH}"
+                    git checkout -f ${SOURCE_BRANCH}
+
+                    if git show-ref --verify --quiet refs/heads/${TARGET_BRANCH}; then
+                        echo "Switching to existing local branch ${TARGET_BRANCH}"
+                        git checkout -f ${TARGET_BRANCH}
+                    elif git ls-remote --heads origin ${TARGET_BRANCH} >/dev/null; then
+                        echo "Branch exists on origin – creating local tracking branch"
+                        git checkout -B ${TARGET_BRANCH} origin/${TARGET_BRANCH}
+                    else
+                        echo "Branch does not exist – creating new local branch"
+                        git checkout -b ${TARGET_BRANCH}
+                    fi
+                '''
+            }
+        }
+        stage('Install Node Dependencies') {
+            steps {
+                sh '''
+                    if [ ! -f "package.json" ]; then
+                        echo "package.json not found — creating new"
+                        npm init -y
+                    fi
+
+                    npm install || true
+                    npx husky install || true
+                '''
+            }
+        }
+
+        stage('Install Java Dependencies') {
+            when { expression { fileExists('pom.xml') } }
+            steps {
+                sh "mvn clean install -DskipTests || true"
+            }
+        }
+
+        stage('Generate AI Tests - Node') {
+            when { expression { fileExists('scripts/generate-tests.js') } }
+            steps {
+                sh "npm init -y" || true
+                sh "node scripts/generate-tests.js || true"
+            }
+        }
+
+        stage('Generate AI Tests - Java') {
+            when { expression { fileExists('scripts/generate-java-tests-new.js') } }
+            steps {
+                sh '''
+                    if [ ! -d "node_modules/groq-sdk" ]; then
+                        npm install groq-sdk
+                    fi
+
+                    node scripts/generate-java-tests-new.js || true
+                '''
+            }
+        }
+
+        stage('Lint and Format') {
+            steps {
+                script {
+                    if (fileExists('package.json')) {
+                        sh "npm run format || true"
+                        sh "npm run lint || true"
+                    }
+                    if (fileExists('pom.xml')) {
+                        sh "mvn checkstyle:check || true"
+                    }
+                }
+            }
+        }
+
+        stage('Run Tests') {
+            steps {
+                sh "mvn test || true"
+            }
+        }
+
+        /* ------------------------------------------------------------- */
+        /* 🔥 FIXED COMMIT & PUSH — rest untouched                       */
+        /* ------------------------------------------------------------- */
+
+        stage('Commit and Push Changes') {
+            steps {
+                sh '''
+                    echo "Staging all changes..."
+                    git add -A
+
+                    echo "Unstaging ignored build folders..."
+                    git restore --staged target/ || true
+                    git restore --staged node_modules/ || true
+
+                    echo "Git status after cleanup:"
+                    git status
+
+                    if [ -n "$(git status --porcelain)" ]; then
+                        echo "Committing changes..."
+                        git commit -m "chore: AI generated tests"
+
+                        echo "Pushing to origin/${TARGET_BRANCH}"
+                        git push origin ${TARGET_BRANCH}
+                    else
+                        echo "No changes to commit."
+                    fi
+                '''
+            }
+        }
+    }
+
+    post {
+        always {
+            echo "Pipeline Finished"
+        }
+        success {
+            echo "Build Succeeded"
+        }
+        failure {
+            echo "Build Failed - Check Logs"
+        }
+    }
+}
