@@ -3,11 +3,10 @@ pipeline {
 
     environment {
         GROQ_API_KEY     = credentials('groq_api_key')
-        GITHUB_TOKEN     = credentials('github_token')
+        GITHUB_TOKEN     = credentials('GITHUB_TOKEN')
         GITHUB_CREDENTIALS_USR = credentials('GITHUB_CREDENTIALS_USR')
-        GITHUB_CREDENTIALS_PSW = credentials('GITHUB_CREDENTIALS_PSW')
         GIT_BRANCH = "ai-tests"
-        REPO_URL = "https://${GITHUB_CREDENTIALS_USR}:${GITHUB_CREDENTIALS_PSW}@github.com/saurabhstatusneo-crypto/jagah.git"
+        REPO_URL = "https://${GITHUB_CREDENTIALS_USR}:${GITHUB_TOKEN}@github.com/saurabhstatusneo-crypto/jagah.git"
         HUSKY_SKIP_INSTALL = '0'
         JAVA_HOME = "C:\\Program Files\\Java\\jdk-21"
         MAVEN_HOME = "C:\\apache-maven-3.8.3"
@@ -171,7 +170,7 @@ stage('Lint and Format') {
             }
 
             Write-Host " Forcing GitHub token in remote URL..."
-            git remote set-url origin "https://${GITHUB_CREDENTIALS_USR}:${GITHUB_CREDENTIALS_PSW}@github.com/saurabhstatusneo-crypto/jagah.git"
+            git remote set-url origin ${REPO_URL}
 
             Write-Host " FORCE PUSHING branch..."
             git push origin ai-tests --force
