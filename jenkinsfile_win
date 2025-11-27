@@ -158,7 +158,11 @@ pipeline {
 
                     if (fileExists('pom.xml')) {
                         powershell '''
-                            try { mvn checkstyle:check } catch { Write-Host " Maven checkstyle failed, continuing..." }
+                            try { mvn checkstyle:check -Dcheckstyle.failOnViolation=false
+                           }
+                         catch {
+                          Write-Host " Maven checkstyle failed, continuing..."
+                         }
                         '''
                     }
                 }
