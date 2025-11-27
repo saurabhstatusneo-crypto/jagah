@@ -9,9 +9,11 @@ pipeline {
         GIT_BRANCH = "ai-tests"
         REPO_URL = "https://saurabhstatusneo-crypto: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@github.com/saurabhstatusneo-crypto/jagah.git"
         HUSKY_SKIP_INSTALL = '0'
-        JAVA_HOME       = "C:\\Program Files\\Common Files\\Oracle\\Java\\javapath" 
-        MAVEN_HOME      = "C:\\opt\\tools\\maven"
-        PATH             = "${env.MAVEN_HOME}/bin;${env.JAVA_HOME}/bin;${env.PATH}"
+        GIT_COMMAND_PATH = "C:\\Users\\SaurabhSharma\\AppData\\Local\\Programs\\Git\\cmd" // NEW: Your confirmed Git path
+        JAVA_HOME   = "C:\\Program Files\\Common Files\\Oracle\\Java\\javapath" 
+        MAVEN_HOME  = "C:\\opt\\tools\\maven"
+       
+             PATH = "${env.GIT_COMMAND_PATH};${env.MAVEN_HOME}\\bin;${env.JAVA_HOME};${env.PATH}"
     }
 
     stages {
