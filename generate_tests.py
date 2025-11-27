@@ -13,10 +13,19 @@ except ImportError:
 # =============================
 # Groq Client
 # =============================
-API_KEY = credentials('GROQ_API_KEY')
+try:
+    from groq import Groq
+except ImportError:
+    print("🚨 Please install 'groq': pip install groq")
+    sys.exit(1)
+
+API_KEY = os.environ.get("GROQ_API_KEY")
+if not API_KEY:
+    API_KEY = "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"
+if not API_KEY:
+    raise Exception("❌ Missing GROQ_API_KEY")
 
 groq_client = Groq(api_key=API_KEY)
-
 # ==============================================================
 # Utility Functions
 # ==============================================================
