@@ -91,33 +91,35 @@ pipeline {
                 '''
             }
         }
-        stage('Generate AI Tests (Java/Spring Boot)') {
-            when { expression { fileExists('script/generate-tests.js') } }
-            steps {
+      stage('Generate AI Tests') {
+    steps {
+        script {
+            if (fileExists('script/generate-tests.js')) {
                 powershell '''
-                    echo " Generating AI-based Java/Spring Boot tests..."
+                    # If package.json doesn't exist, create it
+                    if (!(Test-Path "package.json")) {
+                        Write-Host "package.json not found — creating one..."
+                        npm init -y
+                    }
 
-                    node -v
-                    if ($LASTEXITCODE -ne 0) {
-                        Write-Host " Node.js not installed on this Jenkins agent."
-                        exit 1
+                    # Ensure Node runs ESM files
+                    $pkg = Get-Content package.json | Out-String | ConvertFrom-Json
+                    if ($pkg.type -ne "module") {
+                        Write-Host "Setting type=module in package.json..."
+                        $pkg.type = "module"
+                        $pkg | ConvertTo-Json -Depth 10 | Set-Content package.json
                     }
-                    if (-not (Test-Path "node_modules/groq-sdk")) {
-                        Write-Host " Installing groq-sdk..."
-                        npm install groq-sdk
-                        if ($LASTEXITCODE -ne 0) {
-                            Write-Host " Failed to install groq-sdk"
-                            exit 1
-                        }
-                    }
-                    try {
-                        node script/generate-tests.js
-                    } catch {
-                        Write-Host " Java test generation failed, continuing..."
-                    }
+
+                    # Run your script
+                    node script/generate-tests.js
                 '''
+            } else {
+                echo "generate-tests.js not found — skipping test generation."
             }
         }
+    }
+}
+
 stage('Lint and Format') {
     steps {
         script {
