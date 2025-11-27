@@ -2,11 +2,12 @@ pipeline {
     agent any
 
     environment {
-        GROQ_API_KEY     = credentials('groq_api_key')
-        GITHUB_TOKEN     = credentials('GITHUB_TOKEN')
-        GIT_USER = credentials('GIT_USER')
+        GROQ-API-KEY     = credentials('groq_api_key')
+        GITHUB-TOKEN     = credentials('GITHUB_TOKEN')
+        GITHUB_CREDENTIAL_USR = credentials('github-credential').usr
+        GITHUB_CREDENTIAL_PSW = credentials('github-credential').psw
         GIT_BRANCH = "ai-tests"
-        REPO_URL = "https://${GIT_USER}:${GITHUB_TOKEN}@github.com/saurabhstatusneo-crypto/jagah.git"
+        REPO_URL = "https://${GITHUB_CREDENTIAL_USR}:${GITHUB_CREDENTIAL_PSW}@github.com/saurabhstatusneo-crypto/jagah.git"
         HUSKY_SKIP_INSTALL = '0'
         JAVA_HOME = "C:\\Program Files\\Java\\jdk-21"
         MAVEN_HOME = "C:\\apache-maven-3.8.3"
