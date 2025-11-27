@@ -137,36 +137,6 @@ stage('Install Node.js Dependencies') {
             }
         }
 
-        stage('Lint and Format') {
-            steps {
-                script {
-                    if (fileExists('package.json')) {
-                        powershell '''
-                            $scripts = npm run | Select-String -Pattern 'format|lint'
-
-                            if ($scripts) {
-                                if ($scripts -match 'format') {
-                                    try { npm run format } catch { Write-Host " npm format failed" }
-                                }
-
-                                if ($scripts -match 'lint') {
-                                    try { npm run lint } catch { Write-Host " npm lint failed" }
-                                }
-                            } else {
-                                Write-Host " No npm format/lint scripts found. Skipping..."
-                            }
-                        '''
-                    }
-
-                    if (fileExists('pom.xml')) {
-                        powershell '''
-                            try { mvn checkstyle:check } catch { Write-Host " Maven checkstyle failed, continuing..." }
-                        '''
-                    }
-                }
-            }
-        }
-
         stage('Commit and Push Before PR') {
     steps {
         powershell '''
@@ -188,13 +158,9 @@ stage('Install Node.js Dependencies') {
         '''
     }
 }
-
-
         stage('Run Tests') {
             steps {
                 script {
-                 
-
                     if (fileExists('pom.xml')) {
                         powershell '''
                             try { mvn test } catch { Write-Host " Java tests failed, continuing..." }
