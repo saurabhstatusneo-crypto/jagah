@@ -10,8 +10,8 @@ pipeline {
         REPO_URL = "https://${GITHUB_CREDENTIALS_USR}:${GITHUB_CREDENTIALS_PSW}@github.com/saurabhstatusneo-crypto/jagah.git"
         HUSKY_SKIP_INSTALL = '0'
         JAVA_HOME = "C:\\Program Files\\Java\\jdk-21"
-        MAVEN_HOME       = "/usr/share/maven"
-        PATH             = "${env.MAVEN_HOME}/bin:${env.JAVA_HOME}/bin:${env.PATH}"
+        MAVEN_HOME = "C:\\apache-maven-3.8.3"
+        PATH = "${env.MAVEN_HOME}/bin:${env.JAVA_HOME}/bin:${env.PATH}"
     }
 
     stages {
@@ -135,8 +135,7 @@ pipeline {
                 '''
             }
         }
-
-        stage('Lint and Format') {
+       stage('Lint and Format') {
             steps {
                 script {
                     if (fileExists('package.json')) {
@@ -165,6 +164,7 @@ pipeline {
                 }
             }
         }
+ 
 
         stage('Commit and Push Before PR') {
     steps {
