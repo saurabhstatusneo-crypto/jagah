@@ -55,31 +55,40 @@ pipeline {
             }
         }
 
-        stage('Install Node.js Dependencies') {
-            steps {
-                powershell '''
-                    Write-Host "🔧 Installing Node.js dependencies..."
+stage('Install Node.js Dependencies') {
+    steps {
+        powershell '''
+            Write-Host "🔧 Installing Node.js dependencies..."
 
-                    SET HUSKY_SKIP_INSTALL=0
-                    npm ci
-                    if ($LASTEXITCODE -ne 0) {
-                        Write-Host "⚠️ npm ci failed, continuing..."
-                    }
-
-                    npx husky install
-                    if ($LASTEXITCODE -ne 0) {
-                        Write-Host "⚠️ husky install failed, continuing..."
-                    }
-                '''
+            # 1. Set environment variable using PowerShell syntax
+            $env:HUSKY_SKIP_INSTALL = '0' 
+            
+            # 2. Run npm ci
+            npm ci
+            if ($LASTEXITCODE -ne 0) {
+                Write-Host "⚠️ npm ci failed, continuing..."
             }
-        }
+
+            # 3. Run npx husky install
+            npx husky install
+            if ($LASTEXITCODE -ne 0) {
+                Write-Host "⚠️ husky install failed, continuing..."
+            }
+        '''
+    }
+}
 
         stage('Install Java Dependencies') {
             when { expression { fileExists('pom.xml') } }
             steps {
                 powershell '''
-                    echo "🔧 Installing Java/Maven dependencies..."
-                    mvn clean install -DskipTests || echo "⚠️ Maven install failed, continuing..."
+                    echo " Installing Java/Maven dependencies..."
+                       try {
+                        mvn clean install -DskipTests
+                    } catch {
+                        Write-Host "Maven install failed, continuing..."
+                    }
+                    
                 '''
             }
         }
