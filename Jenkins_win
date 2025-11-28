@@ -3,7 +3,7 @@ pipeline {
 
  environment {
         GROQ_API_KEY           = credentials('GROQ-API-KEY')
-        GITHUB_TOKEN           = credentials('GITHUB-TOKEN')
+        GITHUB_TOKEN           = credentials('GIT_NEW')
         SOURCE_BRANCH          = "source" 
         TARGET_BRANCH          = "ai-tests"
         REPO_URL               = "https://saurabhstatusneo-crypto:${GITHUB_TOKEN}@github.com/saurabhstatusneo-crypto/jagah.git"
