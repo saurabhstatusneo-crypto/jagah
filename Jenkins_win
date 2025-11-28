@@ -155,22 +155,42 @@ stage('Install Node.js Dependencies') {
                 }
             }
         }
+// ... (Your previous stages)
+
+// --- 6. Commit and Push Before PR (Updated for secure authentication) ---
 stage('Commit and Push Before PR') {
     steps {
         script {
-            powershell '''
-                git config user.email "saurabhstatusneo@gmail.com"
-                git config user.name "Saurabh StatusNeo"
-                git add .
-                git commit -m "feat: Automated AI Tests from Jenkins"
-                $auth_url = "https://saurabhstatusneo-crypto:$env:GITHUB_TOKEN@github.com/saurabhstatusneo-crypto/jagah.git"
-                git remote set-url origin $auth_url  
-                git push --set-upstream origin $env:GIT_BRANCH --force
-              if ($LASTEXITCODE -ne 0) {
-                    Write-Host " FATAL ERROR: Git push failed."
-                    exit 1
-                }
-            ''' 
+            // Use 'withCredentials' to inject the secret token securely
+            // The credentialsId MUST match the ID in Jenkins.
+            withCredentials([string(credentialsId: 'GITHUB-TOKEN', variable: 'TOKEN')]) {
+                powershell """
+                    Write-Host "Configuring Git author..."
+                    git config --global core.autocrlf false
+                    git config user.email "saurabhstatusneo@gmail.com"
+                    git config user.name "Saurabh StatusNeo"  
+                    Write-Host "Checking for changes to commit..."
+                    git add .
+                    git commit -m "feat: Automated AI Tests from Jenkins"
+                    if (\$LASTEXITCODE -ne 0) {
+                        if (\$LASTEXITCODE -eq 1) {
+                            Write-Host "No changes to commit, continuing..."
+                        } else {
+                            Write-Host "FATAL ERROR: Git commit failed unexpectedly with exit code \$LASTEXITCODE."
+                            exit 1
+                        }
+                        \$LASTEXITCODE = 0
+                    }
+                    Write-Host "Pushing to TARGET branch: ${env.TARGET_BRANCH}..."
+                    \$auth_url = "https://saurabhstatusneo-crypto:\$env:TOKEN@github.com/saurabhstatusneo-crypto/jagah.git"   
+                    git remote set-url origin \$auth_url
+                    git push --set-upstream origin ${env.TARGET_BRANCH} --force
+                    if (\$LASTEXITCODE -ne 0) {
+                        Write-Host " FATAL ERROR: Git push failed. Authentication error: The token is invalid or lacks 'repo' scope."
+                        exit 1
+                    }
+                """
+            }
         }
     }
 }
