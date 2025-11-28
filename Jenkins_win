@@ -141,18 +141,20 @@ pipeline {
             }
         }
     
-      stage('Commit and Push Before PR') {
+ stage('Commit and Push Before PR') {
     steps {
         script {
             withCredentials([string(credentialsId: 'GITHUB-TOKEN', variable: 'SECURE_GITHUB_TOKEN')]) {
-                powershell """
-                    git remote set-url origin ${env.REPO_URL}
-                    git push --set-upstream origin ${env.GIT_BRANCH} --force
-                    if (\$LASTEXITCODE -ne 0) {
+                powershell '''
+                    Write-Host "Setting remote URL using SECURE_GITHUB_TOKEN."
+                    $auth_url = "https://saurabhstatusneo-crypto:$env:SECURE_GITHUB_TOKEN@github.com/saurabhstatusneo-crypto/jagah.git"
+                    git remote set-url origin $auth_url    
+                    git push --set-upstream origin $env:GIT_BRANCH --force
+                    if ($LASTEXITCODE -ne 0) {
                         Write-Host " FATAL ERROR: Git push failed."
                         exit 1
                     }
-                """
+                '''
             }
         }
     }
