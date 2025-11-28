@@ -4,7 +4,8 @@ pipeline {
  environment {
         GROQ_API_KEY           = credentials('GROQ-API-KEY')
         GITHUB_TOKEN           = credentials('GITHUB-TOKEN')
-        
+        SOURCE_BRANCH          = "source" 
+        TARGET_BRANCH          = "ai-tests"
         REPO_URL               = "https://saurabhstatusneo-crypto:${GITHUB_TOKEN}@github.com/saurabhstatusneo-crypto/jagah.git"
         GIT_BRANCH             = "ai-tests"
         HUSKY_SKIP_INSTALL     = '0'
@@ -140,28 +141,25 @@ pipeline {
                 }
             }
         }
-    
- stage('Commit and Push Before PR') {
+    stage('Commit and Push Before PR') {
     steps {
         script {
             withCredentials([string(credentialsId: 'GITHUB-TOKEN', variable: 'SECURE_GITHUB_TOKEN')]) {
                 powershell '''
-                    Write-Host "Setting remote URL using SECURE_GITHUB_TOKEN."
                     $auth_url = "https://saurabhstatusneo-crypto:$env:SECURE_GITHUB_TOKEN@github.com/saurabhstatusneo-crypto/jagah.git"
-                    git remote set-url origin $auth_url    
-                    git push --set-upstream origin $env:GIT_BRANCH --force
+                    git remote set-url origin $auth_url
+                    git push origin "$env:SOURCE_BRANCH:$env:TARGET_BRANCH" --force
                     if ($LASTEXITCODE -ne 0) {
                         Write-Host " FATAL ERROR: Git push failed."
                         exit 1
                     }
+                    Write-Host "Push successful. Changes from $env:SOURCE_BRANCH are now on $env:TARGET_BRANCH."
                 '''
             }
         }
     }
 }
 }
-
-
     post {
         always { echo "Pipeline finished" }
         success { echo " Pipeline succeeded!" }
