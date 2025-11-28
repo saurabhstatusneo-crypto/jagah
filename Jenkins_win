@@ -56,7 +56,7 @@ pipeline {
             steps {
                 powershell '''
                     Write-Host "Installing Node.js dependencies..."
-
+                        npm init -y 
                     $env:HUSKY_SKIP_INSTALL = '0'
                     
                     npm ci
