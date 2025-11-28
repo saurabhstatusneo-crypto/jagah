@@ -15,42 +15,45 @@ pipeline {
         PATH                   = "${env.GIT_COMMAND_PATH};${env.MAVEN_HOME}\\bin;${env.JAVA_HOME}\\bin;${env.PATH}"
     }
     stages {
-        stage('Checkout SCM') {
-            steps {
-                powershell """
-                    if (!(Test-Path '.git')) {
-                        git clone '${env.REPO_URL}' .
-                    } else {
-                        git fetch origin
-                    }
-
-                    git rev-parse --verify ${env.GIT_BRANCH} > \$null 2>&1
-                    if (\$LASTEXITCODE -eq 0) {
-                        Write-Host "Switching to existing local branch: ${env.GIT_BRANCH}"
-                        git checkout ${env.GIT_BRANCH} > \$null 2>&1
-
-                        git ls-remote --exit-code origin ${env.GIT_BRANCH} > \$null 2>&1
-                        if (\$LASTEXITCODE -eq 0) {
-                            try { git pull origin ${env.GIT_BRANCH} } catch {}
-                        } else {
-                            Write-Host " No remote branch to pull from, continuing..."
-                        }
-                    } else {
-                        git ls-remote --exit-code origin ${env.GIT_BRANCH} > \$null 2>&1
-                        if (\$LASTEXITCODE -eq 0) {
-                            Write-Host " Branch exists on remote. Checking out tracking branch..."
-                            try { git checkout -b ${env.GIT_BRANCH} origin/${env.GIT_BRANCH} } catch { git checkout -b ${env.GIT_BRANCH} }
-                        } else {
-                            Write-Host "Branch does not exist locally or remotely. Creating new branch: ${env.GIT_BRANCH}"
-                            git checkout -b ${env.GIT_BRANCH}
-                        }
-                    }
-
-                    \$LASTEXITCODE = 0
-                    exit \$LASTEXITCODE
-                """
+      stage('Checkout SCM') {
+    steps {
+        powershell """
+            Write-Host "Fetching code from remote..."
+            
+            # --- Ensure the repository is fetched (using Jenkins' internal SCM config is generally cleaner)
+            if (!(Test-Path '.git')) {
+                # Clone using the REPO_URL with embedded token for initial access
+                git clone '${env.REPO_URL}' .
+            } else {
+                git fetch origin
             }
-        }
+
+            # 1. CHECKOUT THE SOURCE BRANCH (Branch with the original code)
+            Write-Host "Checking out SOURCE branch: ${env.SOURCE_BRANCH}"
+            git checkout ${env.SOURCE_BRANCH}
+            git pull origin ${env.SOURCE_BRANCH}
+
+            # 2. CREATE/SWITCH TO THE TARGET BRANCH (Where tests will be pushed)
+            Write-Host "Creating/Switching to TARGET branch: ${env.TARGET_BRANCH}"
+            
+            # Check if the target branch exists remotely
+            git ls-remote --exit-code origin ${env.TARGET_BRANCH} > \$null 2>&1
+            if (\$LASTEXITCODE -eq 0) {
+                # Branch exists remotely, checkout and pull it
+                Write-Host "Target branch exists on remote. Checking out tracking branch..."
+                git checkout ${env.TARGET_BRANCH}
+                git pull origin ${env.TARGET_BRANCH}
+            } else {
+                # Branch does not exist, create it from the current source branch
+                Write-Host "Target branch does not exist. Creating new branch: ${env.TARGET_BRANCH} from ${env.SOURCE_BRANCH}"
+                git checkout -b ${env.TARGET_BRANCH}
+            }
+            
+            \$LASTEXITCODE = 0
+            exit \$LASTEXITCODE
+        """
+    }
+}
 stage('Install Node.js Dependencies') {
     steps {
         powershell '''
@@ -152,18 +155,22 @@ stage('Install Node.js Dependencies') {
                 }
             }
         }
- stage('Commit and Push Before PR') {
+stage('Commit and Push Before PR') {
     steps {
         script {
-                powershell '''
-                    $auth_url = "https://saurabhstatusneo-crypto:$env:GITHUB_TOKEN@github.com/saurabhstatusneo-crypto/jagah.git"
-                    git remote set-url origin $auth_url    
-                    git push --set-upstream origin $env:GIT_BRANCH --force
-                    if ($LASTEXITCODE -ne 0) {
-                        Write-Host " FATAL ERROR: Git push failed."
-                        exit 1
-                    }
-                ''' 
+            powershell '''
+                git config user.email "saurabhstatusneo@gmail.com"
+                git config user.name "Saurabh StatusNeo"
+                git add .
+                git commit -m "feat: Automated AI Tests from Jenkins" || Write-Host "No changes to commit."
+                $auth_url = "https://saurabhstatusneo-crypto:$env:GITHUB_TOKEN@github.com/saurabhstatusneo-crypto/jagah.git"
+                git remote set-url origin $auth_url  
+                git push --set-upstream origin $env:GIT_BRANCH --force
+              if ($LASTEXITCODE -ne 0) {
+                    Write-Host " FATAL ERROR: Git push failed."
+                    exit 1
+                }
+            ''' 
         }
     }
 }
