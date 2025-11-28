@@ -144,17 +144,15 @@ pipeline {
  stage('Commit and Push Before PR') {
     steps {
         script {
-            withCredentials([string(credentialsId: 'GITHUB-TOKEN', variable: 'SECURE_GITHUB_TOKEN')]) {
                 powershell '''
-                    $auth_url = "https://saurabhstatusneo-crypto:$env:SECURE_GITHUB_TOKEN@github.com/saurabhstatusneo-crypto/jagah.git"
+                    $auth_url = "https://saurabhstatusneo-crypto:$env:GITHUB_TOKEN@github.com/saurabhstatusneo-crypto/jagah.git"
                     git remote set-url origin $auth_url    
                     git push --set-upstream origin $env:GIT_BRANCH --force
                     if ($LASTEXITCODE -ne 0) {
                         Write-Host " FATAL ERROR: Git push failed."
                         exit 1
                     }
-                '''
-            }
+                ''' 
         }
     }
 }
