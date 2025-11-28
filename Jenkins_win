@@ -148,7 +148,7 @@ pipeline {
                 powershell '''
                     $auth_url = "https://saurabhstatusneo-crypto:$env:SECURE_GITHUB_TOKEN@github.com/saurabhstatusneo-crypto/jagah.git"
                     git remote set-url origin $auth_url
-                    git push origin "$env:SOURCE_BRANCH:$env:TARGET_BRANCH" --force
+                    git push origin $env:SOURCE_BRANCH:$env:TARGET_BRANCH --force
                     if ($LASTEXITCODE -ne 0) {
                         Write-Host " FATAL ERROR: Git push failed."
                         exit 1
