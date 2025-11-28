@@ -51,26 +51,37 @@ pipeline {
                 """
             }
         }
-
-        stage('Install Node.js Dependencies') {
-            steps {
-                powershell '''
-                    Write-Host "Installing Node.js dependencies..."
-                        npm init -y 
-                    $env:HUSKY_SKIP_INSTALL = '0'
-                    
-                    npm ci
-                    if ($LASTEXITCODE -ne 0) {
-                        Write-Host "npm ci failed, continuing..."
-                    }
-
-                    npx husky install
-                    if ($LASTEXITCODE -ne 0) {
-                        Write-Host "husky install failed, continuing..."
-                    }
-                '''
+stage('Install Node.js Dependencies') {
+    steps {
+        powershell '''
+            Write-Host "Installing Node.js dependencies..."
+            $jsonContent = @'
+{
+  "name": "ai-java-testcase",
+  "version": "1.0.0",
+  "description": "Node dependencies for Jenkins AI test generation.",
+  "type": "module", 
+  "dependencies": {
+    "groq-sdk": "^0.37.0"
+  }
+}
+'@
+            $jsonContent | Set-Content -Path "package.json" -Encoding UTF8
+            Write-Host "Manually created package.json with type: module."
+            $env:HUSKY_SKIP_INSTALL = '0'
+            npm install
+            
+            if ($LASTEXITCODE -ne 0) {
+                Write-Host "npm install failed, continuing..."
             }
-        }
+            npx husky install
+            if ($LASTEXITCODE -ne 0) {
+                Write-Host "husky install failed, continuing..."
+            }
+        '''
+    }
+}
+
 
         stage('Install Java Dependencies') {
             when { expression { fileExists('pom.xml') } }
