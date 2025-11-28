@@ -95,7 +95,7 @@ pipeline {
 
        
     stage('Generate AI Tests (Java/Spring Boot)') {
-    when { expression { fileExists('node script/generate-tests.js') } }
+    when { expression { fileExists('script/generate-tests.js') } }
     steps {
         powershell '''
             Write-Host " Generating AI-based Java/Spring Boot tests..."
