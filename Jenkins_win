@@ -162,7 +162,7 @@ stage('Commit and Push Before PR') {
                 git config user.email "saurabhstatusneo@gmail.com"
                 git config user.name "Saurabh StatusNeo"
                 git add .
-                git commit -m "feat: Automated AI Tests from Jenkins" || Write-Host "No changes to commit."
+                git commit -m "feat: Automated AI Tests from Jenkins"
                 $auth_url = "https://saurabhstatusneo-crypto:$env:GITHUB_TOKEN@github.com/saurabhstatusneo-crypto/jagah.git"
                 git remote set-url origin $auth_url  
                 git push --set-upstream origin $env:GIT_BRANCH --force
