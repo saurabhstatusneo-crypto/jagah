@@ -1,0 +1,9 @@
+﻿{
+  "name": "ai-java-testcase",
+  "version": "1.0.0",
+  "description": "Node dependencies for Jenkins AI test generation.",
+  "type": "module", 
+  "dependencies": {
+    "groq-sdk": "^0.37.0"
+  }
+}
