@@ -31,7 +31,5 @@ replay_pid*
 /nbdist/
 /.nb-gradle/
 build/
-!**/src/main/**/build/
-!**/src/test/**/build/
 target/
 node_modules
