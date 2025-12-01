@@ -1,0 +1,67 @@
+pipeline {
+    agent any
+
+    environment {
+        REPO_URL = "https://github.com/saurabhstatusneo-crypto/jagah.git"
+        NEW_BRANCH = "auto-update-${BUILD_NUMBER}"
+    }
+
+    stages {
+
+        stage('Clone Repo') {
+            steps {
+                withCredentials([
+                    usernamePassword(credentialsId: 'Github-Credentials',
+                        usernameVariable: 'USERNAME',
+                        passwordVariable: 'PASSWORD')
+                ]) {
+                    bat '''
+                        rmdir /s /q repo || echo repo not exist
+
+                        git clone https://%USERNAME%:%PASSWORD%@github.com/saurabhstatusneo-crypto/jagah.git repo
+                    '''
+                }
+            }
+        }
+
+        stage('Create Branch') {
+            steps {
+                bat '''
+                    cd repo
+                    git checkout -b %NEW_BRANCH%
+                '''
+            }
+        }
+
+        stage('Append File') {
+            steps {
+                bat '''
+                    cd repo
+                    echo This is an automatic update from Jenkins >> update.txt
+                '''
+            }
+        }
+
+        stage('Commit & Push') {
+            steps {
+                withCredentials([
+                    usernamePassword(credentialsId: 'Github-Credentials',
+                        usernameVariable: 'USERNAME',
+                        passwordVariable: 'PASSWORD')
+                ]) {
+                    bat '''
+                        cd repo
+
+                        git config user.email "saurabhstatusneo@gmail.com"
+                        git config user.name "saurabhstatusneo-crypto"
+
+                        git add .
+                        git commit -m "Automated update from Jenkins build %BUILD_NUMBER%"
+
+                        git push https://%USERNAME%:%PASSWORD%@github.com/saurabhstatusneo-crypto/jagah.git %NEW_BRANCH%
+                    '''
+                }
+            }
+        }
+    }
+}
