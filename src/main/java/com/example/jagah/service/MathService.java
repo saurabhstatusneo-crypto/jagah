@@ -17,8 +17,4 @@ public class MathService  {
     public long square(int a) {
         return (long) a * a;
     }
-
-    public boolean isPositive(int a) {
-        return a > 0;
-    }
 }

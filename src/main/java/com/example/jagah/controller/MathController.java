@@ -37,11 +37,4 @@ public class MathController {
         long result = mathService.square(a);
         return ResponseEntity.ok("The square of " + a + " is: " + result);
     }
-
-    @GetMapping("/isPositive")
-    public ResponseEntity<String> checkPositive(@RequestParam int a) {
-        boolean positive = mathService.isPositive(a);
-        String message = a + " is " + (positive ? "positive." : "not positive.");
-        return ResponseEntity.ok(message);
-    }
 }
